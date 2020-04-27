@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -430,8 +431,14 @@ func atoiWithDefault(s string, def int) (int, error) {
 	return strconv.Atoi(s)
 }
 
+var (
+	writeMutex sync.Mutex
+)
+
 // Write writes data on console
 func (w *Writer) Write(data []byte) (n int, err error) {
+	writeMutex.Lock()
+	defer writeMutex.Unlock()
 	var csbi consoleScreenBufferInfo
 	procGetConsoleScreenBufferInfo.Call(uintptr(w.handle), uintptr(unsafe.Pointer(&csbi)))
 
